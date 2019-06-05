@@ -1,5 +1,7 @@
-#include<windows.h>
-#include<stdio.h>
+#include <Windows.h>
+#include <stdio.h>
+#include <string.h>
+
 int main()
 {
 
@@ -27,28 +29,60 @@ else{printf("\n nao");}
 DWORD dwRead;
 BOOL fWaitingOnRead = FALSE;
 OVERLAPPED osReader = {0};
-char lpBuf[300]= {0};
+char lpBuf[300];
+char auxchar;
+BOOL Status;
 
 // Create the overlapped event. Must be closed before exiting
 // to avoid a handle leak.
 osReader.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-if (osReader.hEvent == NULL)
-   {
-       printf("Erro");
-   }
+COMMTIMEOUTS timeouts = { 0 };
+	timeouts.ReadIntervalTimeout = 50;
+	timeouts.ReadTotalTimeoutConstant = 50;
+	timeouts.ReadTotalTimeoutMultiplier = 10;
+	timeouts.WriteTotalTimeoutConstant = 50;
+	timeouts.WriteTotalTimeoutMultiplier = 10;
 
-if (!fWaitingOnRead) {
-   // Issue read operation.
-   if (!ReadFile(hComm, lpBuf, 3, &dwRead, &osReader)) {
-      if (GetLastError() != ERROR_IO_PENDING)     // read not delayed?
-         printf("Error in communications; report it.");
-      else
-         fWaitingOnRead = TRUE;
-   }
-   else {
-      // read completed immediately
-     printf("%x\n",lpBuf);
-    }
+	if (SetCommTimeouts(hComm, &timeouts) == FALSE)
+		printf("\n\n    Error! in Setting Time Outs");
+	else
+		printf("\n\n    Setting Serial Port Timeouts Successfull");
+
+	//------------------------------------ Setting Receive Mask ----------------------------------------------/
+
+	Status = SetCommMask(hComm, EV_RXCHAR); //Configure Windows to Monitor the serial device for Character Reception
+
+	if (Status == FALSE)
+		printf("\n\n  Error! in Setting CommMask");
+	else
+		printf("\n\n  Setting CommMask successfull");
+
+DWORD dwEventMask;
+Status = WaitCommEvent(hComm, &dwEventMask, NULL);
+int i, j;
+if (Status == FALSE)
+	{
+		printf("\n    Error! in Setting WaitCommEvent()");
+	}
+	else //If  WaitCommEvent()==True Read the RXed data using ReadFile();
+	{
+		printf("\n\n    Characters Received");
+		do
+		{
+			Status = ReadFile(hComm, &auxchar, sizeof(auxchar), &dwRead, NULL);
+			printf("TESTE");
+			lpBuf[i] = auxchar;
+			i++;
+		} while (dwRead > 0);
+
+//------------Printing the RXed String to Console----------------------/
+
+        printf("\n\n    ");
+        int j = 0;
+        for (j = 0; j < i - 1; j++){	// j < i-1 to remove the dupliated last character
+            printf("%c", lpBuf[j]);}
+
 }
+CloseHandle(hComm);//Closing the Serial Port
 }
