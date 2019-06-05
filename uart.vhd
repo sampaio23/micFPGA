@@ -9,7 +9,9 @@ entity UART is
 		LEDS : out std_logic_vector(3 downto 0);
 		CLK27M : in std_logic;
 		TX : out std_logic;
-		RX : in std_logic
+		RX : in std_logic;
+		GPIO : in std_logic_vector(6 downto 0);
+		BUZZER : out std_logic
 	);
 	end UART;
 	
@@ -38,8 +40,10 @@ signal prox: std_logic_vector(14 downto 0);
 		clkTX <= cont(11);
 		clkRX <= cont2(7);
 		
-		prox <= "1110" & DIPSW & DIPSW & "111"; -- when BUTTON='0' else atual(8 downto 0) & '1';
+		-- prox <= "1110" & DIPSW & DIPSW & "111"; -- when BUTTON='0' else atual(8 downto 0) & '1';
 		-- TX <= atual(9);
+		-- prox <= "1110" & GPIO & "111";
+		prox <= "11100" & GPIO & "111";
 		
 		process(clkTX)
 			begin
@@ -67,6 +71,7 @@ signal prox: std_logic_vector(14 downto 0);
 						if(cont160 = "10011100") then
 							recebendo <= '0';
 							LEDS <= palavra (4 downto 1);
+							BUZZER <= palavra(1);
 						end if;
 					end if;
 				end if;
